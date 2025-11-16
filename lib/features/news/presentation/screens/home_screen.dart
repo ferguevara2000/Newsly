@@ -1,36 +1,57 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-class HomeScreen extends StatelessWidget {
+import '../providers/news_providers.dart';
+import '../../domain/entities/article.dart';
+
+class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    // Lista dummy de noticias por ahora
-    final articles = List.generate(
-      10,
-      (i) => {
-        'id': 'article_$i',
-        'title': 'Noticia #$i',
-        'subtitle': 'Descripción corta de la noticia número $i',
-      },
-    );
+  Widget build(BuildContext context, WidgetRef ref) {
+    final articlesAsync = ref.watch(articlesProvider);
 
     return Scaffold(
       appBar: AppBar(title: const Text('Newsly')),
-      body: ListView.builder(
-        itemCount: articles.length,
-        itemBuilder: (_, index) {
-          final article = articles[index];
-          return ListTile(
-            title: Text(article['title']!),
-            subtitle: Text(article['subtitle']!),
-            onTap: () {
-              context.push('/article/${article['id']}');
+      body: articlesAsync.when(
+        data: (articles) {
+          if (articles.isEmpty) {
+            return const Center(child: Text('No hay noticias disponibles.'));
+          }
+
+          return ListView.builder(
+            itemCount: articles.length,
+            itemBuilder: (_, index) {
+              final article = articles[index];
+              return _ArticleTile(article: article);
             },
           );
         },
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (err, stack) =>
+            Center(child: Text('Error al cargar noticias: $err')),
       ),
+    );
+  }
+}
+
+class _ArticleTile extends StatelessWidget {
+  final Article article;
+  const _ArticleTile({required this.article});
+
+  @override
+  Widget build(BuildContext context) {
+    return ListTile(
+      title: Text(article.title),
+      subtitle: Text(
+        article.description,
+        maxLines: 2,
+        overflow: TextOverflow.ellipsis,
+      ),
+      onTap: () {
+        context.push('/article/${article.id}');
+      },
     );
   }
 }
