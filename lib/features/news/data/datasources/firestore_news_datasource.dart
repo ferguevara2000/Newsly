@@ -1,3 +1,4 @@
+// lib/features/news/data/datasources/firestore_news_datasource.dart
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/article_model.dart';
 
@@ -9,17 +10,18 @@ class FirestoreNewsDatasource {
     String? category,
     int limit = 20,
   }) async {
-    Query<Map<String, dynamic>> query = _db
-        .collection('articles')
-        .orderBy('publishedAt', descending: true);
+    Query<Map<String, dynamic>> query = _db.collection('articles');
 
     if (category != null && category.isNotEmpty) {
-      query = query.where('category', isEqualTo: category);
+      // 🔹 Solo filtramos por categoría (sin orderBy para evitar índice compuesto)
+      query = query.where('category', isEqualTo: category).limit(limit);
+    } else {
+      // 🔹 Para "Todas" sí ordenamos por fecha
+      query = query.orderBy('publishedAt', descending: true).limit(limit);
     }
 
-    query = query.limit(limit);
-
     final snap = await query.get();
+
     return snap.docs.map((doc) => ArticleModel.fromDoc(doc)).toList();
   }
 
