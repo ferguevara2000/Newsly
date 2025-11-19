@@ -1,7 +1,9 @@
 import 'package:go_router/go_router.dart';
 import 'package:flutter/material.dart';
+
 import '../features/news/presentation/screens/home_screen.dart';
 import '../features/news/presentation/screens/article_detail_screen.dart';
+import '../features/news/presentation/screens/favorites_screen.dart';
 
 final appRouter = GoRouter(
   routes: [
@@ -18,6 +20,13 @@ final appRouter = GoRouter(
       pageBuilder: (context, state) {
         final id = state.pathParameters['id']!;
         return MaterialPage(child: ArticleDetailScreen(id: id));
+      },
+    ),
+    GoRoute(
+      path: '/favorites',
+      name: 'favorites',
+      pageBuilder: (context, state) {
+        return const MaterialPage(child: FavoritesScreen());
       },
     ),
   ],

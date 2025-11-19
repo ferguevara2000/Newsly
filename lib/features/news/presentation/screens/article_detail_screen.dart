@@ -39,11 +39,11 @@ class ArticleDetailScreen extends ConsumerWidget {
               ? FloatingActionButton.extended(
                   onPressed: () async {
                     final uri = Uri.parse(article.sourceUrl!);
-                    if (await canLaunchUrl(uri)) {
-                      await launchUrl(
-                        uri,
-                        mode: LaunchMode.externalApplication,
-                      );
+                    if (!await launchUrl(
+                      uri,
+                      mode: LaunchMode.externalApplication,
+                    )) {
+                      throw Exception('No se pudo abrir la URL');
                     }
                   },
                   icon: const Icon(Icons.open_in_new),

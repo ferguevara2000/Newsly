@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/legacy.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 
 import '../../domain/entities/article.dart';
 import '../../domain/repositories/news_repository.dart';
@@ -23,3 +24,41 @@ final articlesProvider = FutureProvider<List<Article>>((ref) async {
   final category = ref.watch(categoryFilterProvider);
   return repo.fetchArticles(category: category);
 });
+
+/// Lista de todos los artículos (para favoritos)
+final allArticlesProvider = FutureProvider<List<Article>>((ref) async {
+  final repo = ref.watch(newsRepositoryProvider);
+  return repo.fetchArticles();
+});
+
+/// Box de Hive para favoritos
+final favoritesBoxProvider = Provider<Box<String>>((ref) {
+  return Hive.box<String>('favorites');
+});
+
+class FavoritesNotifier extends StateNotifier<Set<String>> {
+  FavoritesNotifier(this._box) : super(_box.values.toSet());
+
+  final Box<String> _box;
+
+  void toggle(String articleId) {
+    final current = {...state};
+
+    if (current.contains(articleId)) {
+      current.remove(articleId);
+      _box.delete(articleId);
+    } else {
+      current.add(articleId);
+      _box.put(articleId, articleId);
+    }
+
+    state = current;
+  }
+}
+
+final favoritesProvider = StateNotifierProvider<FavoritesNotifier, Set<String>>(
+  (ref) {
+    final box = ref.watch(favoritesBoxProvider);
+    return FavoritesNotifier(box);
+  },
+);

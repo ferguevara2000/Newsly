@@ -15,7 +15,18 @@ class HomeScreen extends ConsumerWidget {
     final selectedCategory = ref.watch(categoryFilterProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Newsly')),
+      appBar: AppBar(
+        title: const Text('Newsly'),
+        actions: [
+          IconButton(
+            onPressed: () {
+              context.push('/favorites');
+            },
+            icon: const Icon(Icons.bookmark),
+            tooltip: 'Favoritos',
+          ),
+        ],
+      ),
       body: Column(
         children: [
           _CategoryChips(
@@ -116,13 +127,16 @@ class _CategoryChips extends StatelessWidget {
   }
 }
 
-class _ArticleCard extends StatelessWidget {
+class _ArticleCard extends ConsumerWidget {
   final Article article;
 
   const _ArticleCard({super.key, required this.article});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final favorites = ref.watch(favoritesProvider);
+    final isFavorite = favorites.contains(article.id);
+
     final dateFormatted = DateFormat('dd MMM yyyy').format(article.publishedAt);
 
     return Card(
@@ -156,7 +170,7 @@ class _ArticleCard extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                   ),
                   const SizedBox(height: 6),
-                  // Fecha + categoría
+                  // Fecha + categoría + icono favorito
                   Row(
                     children: [
                       Text(
@@ -168,6 +182,17 @@ class _ArticleCard extends StatelessWidget {
                         article.category.toUpperCase(),
                         style: Theme.of(context).textTheme.labelSmall?.copyWith(
                           fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const Spacer(),
+                      IconButton(
+                        onPressed: () {
+                          ref
+                              .read(favoritesProvider.notifier)
+                              .toggle(article.id);
+                        },
+                        icon: Icon(
+                          isFavorite ? Icons.bookmark : Icons.bookmark_border,
                         ),
                       ),
                     ],
