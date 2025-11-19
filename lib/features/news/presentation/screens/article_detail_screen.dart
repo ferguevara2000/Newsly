@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../providers/news_providers.dart';
 import '../../domain/entities/article.dart';
@@ -27,28 +29,74 @@ class ArticleDetailScreen extends ConsumerWidget {
         }
 
         final article = snapshot.data!;
+        final dateFormatted = DateFormat(
+          'dd MMM yyyy, HH:mm',
+        ).format(article.publishedAt);
+
         return Scaffold(
           appBar: AppBar(title: Text(article.sourceName)),
+          floatingActionButton: article.sourceUrl != null
+              ? FloatingActionButton.extended(
+                  onPressed: () async {
+                    final uri = Uri.parse(article.sourceUrl!);
+                    if (await canLaunchUrl(uri)) {
+                      await launchUrl(
+                        uri,
+                        mode: LaunchMode.externalApplication,
+                      );
+                    }
+                  },
+                  icon: const Icon(Icons.open_in_new),
+                  label: const Text('Ver fuente'),
+                )
+              : null,
           body: ListView(
-            padding: const EdgeInsets.all(16),
             children: [
-              Text(
-                article.title,
-                style: Theme.of(context).textTheme.headlineSmall,
-              ),
-              const SizedBox(height: 8),
-              Text(
-                article.description,
-                style: Theme.of(context).textTheme.bodyMedium,
-              ),
-              const SizedBox(height: 16),
               if (article.imageUrl.isNotEmpty)
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(12),
-                  child: Image.network(article.imageUrl),
+                Hero(
+                  tag: 'article-image-${article.id}',
+                  child: Image.network(article.imageUrl, fit: BoxFit.cover),
                 ),
-              const SizedBox(height: 16),
-              Text(article.content),
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Categoría + fecha
+                    Text(
+                      article.category.toUpperCase(),
+                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      dateFormatted,
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
+                    const SizedBox(height: 12),
+                    // Título
+                    Text(
+                      article.title,
+                      style: Theme.of(context).textTheme.headlineSmall,
+                    ),
+                    const SizedBox(height: 12),
+                    // Descripción
+                    Text(
+                      article.description,
+                      style: Theme.of(context).textTheme.bodyMedium,
+                    ),
+                    const SizedBox(height: 16),
+                    const Divider(),
+                    const SizedBox(height: 16),
+                    // Contenido
+                    Text(
+                      article.content,
+                      style: Theme.of(context).textTheme.bodyLarge,
+                    ),
+                  ],
+                ),
+              ),
             ],
           ),
         );

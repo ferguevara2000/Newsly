@@ -136,9 +136,12 @@ class _ArticleCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             if (article.imageUrl.isNotEmpty)
-              AspectRatio(
-                aspectRatio: 16 / 9,
-                child: Image.network(article.imageUrl, fit: BoxFit.cover),
+              Hero(
+                tag: 'article-image-${article.id}',
+                child: AspectRatio(
+                  aspectRatio: 16 / 9,
+                  child: Image.network(article.imageUrl, fit: BoxFit.cover),
+                ),
               ),
             Padding(
               padding: const EdgeInsets.all(12),
